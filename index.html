@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gatito</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <style>
+    :root{
+      --card: rgba(255,255,255,.85);
+      --grid:#d0d0d0;
+      --x:#12a979;
+      --o:#e55a7e;
+      --txt:#1d1d1f;
+      --mut:#5f5f68;
+      --acc:#ffb74d;
+    }
+
+    *{box-sizing:border-box;}
+    html,body{height:100%;}
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+      background:#ffffff;
+      display:flex; justify-content:center; align-items:center;
+      min-height:100vh; padding:16px;
+      overflow:hidden; /* evita scroll por moños */
+    }
+
+    .bow {
+      position:fixed;
+      pointer-events:none;
+      top:0; left:0;
+      opacity:0.3;
+      z-index:-1;
+      user-select:none;
+    }
+
+    .app{width:100%; max-width:520px; position:relative; z-index:10;}
+
+    .card{
+      background:var(--card);
+      backdrop-filter:blur(6px);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 6px 20px rgba(0,0,0,.15);
+      border:1px solid rgba(0,0,0,.06);
+    }
+
+    header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
+    h1{margin:0; font-size:22px;}
+
+    .row{display:flex; gap:8px; flex-wrap:wrap;}
+
+    #marcador span{
+      background:#fff;
+      border:1px solid var(--grid);
+      padding:6px 10px;
+      color:#444;
+      border-radius:8px;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    #nombres input{
+      flex:1;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid var(--grid);
+      background:#fff;
+      outline:none;
+    }
+
+    .board-wrap{position:relative;}
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .cell{
+      aspect-ratio:1/1;
+      border-radius:12px;
+      border:1px solid var(--grid);
+      background:#fff;
+      display:flex; justify-content:center; align-items:center;
+      font-size:46px; cursor:pointer; user-select:none;
+      transition:transform .08s ease;
+    }
+
+    .cell:active{transform:scale(.95);}
+    .cell.x{color:var(--x); font-weight:700;}
+    .cell.o{color:var(--o); font-weight:700;}
+
+    .cell.win{
+      outline:2px solid var(--acc);
+      box-shadow:0 0 0 3px rgba(255,183,77,.3) inset;
+    }
+
+    .win-line{
+      position:absolute;
+      height:4px;
+      background:var(--acc);
+      border-radius:3px;
+      box-shadow:0 0 12px rgba(255,183,77,.5);
+      opacity:0;
+      pointer-events:none;
+      transform-origin:0 50%;
+      transition:opacity .15s ease;
+    }
+
+    .win-line.show{opacity:1;}
+
+    .meta{
+      margin-top:12px;
+      display:flex; justify-content:space-between; align-items:center;
+      color:var(--mut);
+    }
+
+    button{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--grid);
+      background:#fff;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    button.primary{
+      font-weight:600;
+      background:#f3f3f3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Moños generados aleatoriamente -->
+  <script>
+    const bowsToGenerate = 20; // cuántos moñitos quieres
+
+    for(let i=0; i<bowsToGenerate; i++){
+      const img = document.createElement("img");
+      img.src = "mono.png";
+      img.className = "bow";
+
+      // tamaño random (más disperso)
+      const size = Math.random() * 300 + 200; // entre 100px y 300px
+      img.style.width = size + "px";
+
+      // opacidad suave random
+      img.style.opacity = (Math.random()*0.25+0.25).toFixed(2);
+
+      // posición random
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      img.style.left = x + "vw";
+      img.style.top = y + "vh";
+
+      // rotación leve random
+      const rotate = Math.random() * 60 - 30;
+      img.style.transform = `rotate(${rotate}deg)`;
+
+      document.body.appendChild(img);
+    }
+  </script>
+
+  <!-- Juego -->
+  <div class="app">
+    <div class="card">
+      <header>
+        <h1>te meo sophia</h1>
+        <div class="row" id="marcador">
+          <span id="scoreX">X: 0</span>
+          <span id="scoreO">O: 0</span>
+        </div>
+      </header>
+
+      <div class="row" id="nombres">
+        <input id="nombreX" placeholder="Nombre X">
+        <input id="nombreO" placeholder="Nombre O">
+      </div>
+
+      <div class="board-wrap">
+        <div id="grid" class="grid"></div>
+        <div id="winLine" class="win-line"></div>
+      </div>
+
+      <div class="meta">
+        <span id="turno">Turno de X</span>
+        <div class="row">
+          <button id="reset">Reiniciar</button>
+          <button id="nuevo" class="primary">Partida nueva</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const wrap = document.querySelector('.board-wrap');
+    const winLine = document.getElementById('winLine');
+
+    const turnoTexto = document.getElementById('turno');
+    const resetBtn = document.getElementById('reset');
+    const nuevoBtn = document.getElementById('nuevo');
+    const nombreX = document.getElementById('nombreX');
+    const nombreO = document.getElementById('nombreO');
+    const scoreXEl = document.getElementById('scoreX');
+    const scoreOEl = document.getElementById('scoreO');
+
+    let state = { board: Array(9).fill(''), xTurn: true, lock: false };
+    let puntosX = 0;
+    let puntosO = 0;
+
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function cellEls(){ return [...document.querySelectorAll('.cell')]; }
+
+    function draw(){
+      grid.innerHTML = '';
+      for (let i=0;i<9;i++){
+        const c = document.createElement('button');
+        c.className = 'cell ' + (state.board[i]==='X'?'x': state.board[i]==='O'?'o':'');
+        c.textContent = state.board[i];
+        c.onclick = ()=>clickCell(i);
+        grid.appendChild(c);
+      }
+      winLine.classList.remove('show');
+      turnoTexto.textContent = 'Turno de ' + (state.xTurn ? 'X' : 'O');
+    }
+
+    function clickCell(i){
+      if (state.lock || state.board[i]) return;
+      state.board[i] = state.xTurn ? 'X' : 'O';
+      state.xTurn = !state.xTurn;
+      draw();
+      check();
+    }
+
+    function check(){
+      const cells = cellEls();
+
+      for (const w of wins){
+        const [a,b,c] = w;
+        if (state.board[a] && state.board[a]===state.board[b] && state.board[a]===state.board[c]){
+          state.lock = true;
+          cells[a].classList.add('win');
+          cells[b].classList.add('win');
+          cells[c].classList.add('win');
+          drawWinLine(a,c);
+
+          const ganador = state.board[a];
+          if (ganador==='X'){ puntosX++; scoreXEl.textContent = 'X: ' + puntosX; }
+          else { puntosO++; scoreOEl.textContent = 'O: ' + puntosO; }
+
+          const nx = nombreX.value || 'X';
+          const no = nombreO.value || 'O';
+          turnoTexto.innerHTML = 'te meo <b>' + (ganador==='X'?nx:no) + '</b> 😎';
+          return;
+        }
+      }
+
+      if (state.board.every(v=>v)){
+        state.lock = true;
+        turnoTexto.textContent = 'Empate 😐';
+      }
+    }
+
+    function drawWinLine(startIdx, endIdx){
+      const cells = cellEls();
+      const startRect = cells[startIdx].getBoundingClientRect();
+      const endRect   = cells[endIdx].getBoundingClientRect();
+      const wrapRect  = wrap.getBoundingClientRect();
+
+      const x1 = (startRect.left + startRect.right)/2 - wrapRect.left;
+      const y1 = (startRect.top  + startRect.bottom)/2 - wrapRect.top;
+      const x2 = (endRect.left   + endRect.right)/2   - wrapRect.left;
+      const y2 = (endRect.top    + endRect.bottom)/2  - wrapRect.top;
+
+      const dx = x2-x1;
+      const dy = y2-y1;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy,dx) * 180/Math.PI;
+
+      winLine.style.left = x1 + "px";
+      winLine.style.top  = y1 + "px";
+      winLine.style.width = dist + "px";
+      winLine.style.transform = `rotate(${angle}deg)`;
+      winLine.classList.add('show');
+    }
+
+    function tableroNuevo(){
+      state.board = Array(9).fill('');
+      state.xTurn = true;
+      state.lock = false;
+      cellEls().forEach(c=>c.classList.remove('win'));
+      draw();
+    }
+
+    resetBtn.onclick = ()=>{
+      puntosX = 0;
+      puntosO = 0;
+      scoreXEl.textContent="X: 0";
+      scoreOEl.textContent="O: 0";
+      tableroNuevo();
+      turnoTexto.textContent="Turno de X";
+    };
+
+    nuevoBtn.onclick = ()=>{
+      tableroNuevo();
+      turnoTexto.textContent="Turno de X";
+    };
+
+    draw();
+  </script>
+</body>
+</html>
