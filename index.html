@@ -22,7 +22,7 @@
     .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(1.15);}
     
     .app{width:100%; max-width:540px}
-    .card{background:var(--card); backdrop-filter:blur(6px); border:1px solid rgba(0,0,0,.06);
+    .card{background:var(--card); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.06);
       border-radius:16px; padding:16px; box-shadow:0 6px 28px rgba(0,0,0,.12)}
     header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
     h1{margin:0; font-size:20px}
@@ -101,12 +101,12 @@
   <!-- Firebase + Juego -->
   <script type="module">
     /* ---------------- Fondo con moñitos ---------------- */
-    const bowsToGenerate = 22;
+    const bowsToGenerate = 32;
     for(let i=0;i<bowsToGenerate;i++){
       const img=document.createElement("img");
       img.src="mono.png"; img.alt="fondo";
       img.className="bow";
-      const size=Math.random()*280+200;   // más dispersos
+      const size=Math.random()*160+120;   // más dispersos
       img.style.width=size+"px";
       img.style.opacity=(Math.random()*0.25+0.25).toFixed(2); // 25% - 50% (15% más intenso)
       img.style.left=(Math.random()*100)+"vw";
@@ -355,3 +355,4 @@
   </script>
 </body>
 </html>
+
