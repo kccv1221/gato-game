@@ -18,12 +18,12 @@
       background:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
-    
-    .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:0.6; filter: saturate(2) brightness(1.3);}
+    /* Fondo con moñitos dispersos */
+    .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(2);}
     
     .app{width:100%; max-width:540px}
-    .card{background:rgba(255,255,255,0.35); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.4);
-      border-radius:16px; padding:16px; box-shadow:0 6px 28px rgba(0,0,0,0,.12)}
+    .card{background:rgba(255,255,255,0.35); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.4);
+      border-radius:16px; padding:16px; box-shadow:0 6px 28px rgba(0,0,0,0.12)}
     header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
     h1{margin:0; font-size:20px}
 
@@ -40,9 +40,9 @@
     #status{margin:8px 0; color:var(--mut); font-size:14px}
 
     .board-wrap{position:relative}
-    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px}
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
     .cell{
-      aspect-ratio:1/1; border-radius:12px; background:rgba(255,255,255,.55); border:1px solid var(--grid);
+      aspect-ratio:1/1; border-radius:12px; background:#fff; border:1px solid var(--grid);
       display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:800;
       cursor:pointer; user-select:none; transition:transform .08s ease, background .2s ease;
     }
@@ -52,8 +52,8 @@
     .cell.win{outline:2px solid var(--acc); box-shadow:0 0 0 3px rgba(255,183,77,.16) inset}
 
     .win-line{
-      position:absolute; left:0; top:0; height:4px; background:rgba(255,183,77,0.95);
-      transform-origin:0 50%; border-radius:3px; box-shadow:0 0 12px rgba(255,183,77,.45);
+      position:absolute; left:0; top:0; height:4px; background:var(--acc);
+      transform-origin:0 50%; border-radius:3px; box-shadow:0 0 12px rgba(255,183,77,.4);
       pointer-events:none; opacity:0; transition:opacity .15s ease;
     }
     .win-line.show{opacity:1}
@@ -62,7 +62,7 @@
   </style>
 </head>
 <body>
-  
+  <!-- moñitos (se inyectan por JS) -->
 
   <div class="app">
     <div class="card">
@@ -74,7 +74,7 @@
         </div>
       </header>
 
-     
+      <!-- Sala privada -->
       <div class="row" id="lobby">
         <input id="nombre" placeholder="Tu nombre">
         <input id="codigo" placeholder="Código de sala (ej: sophia15)">
@@ -98,17 +98,17 @@
     </div>
   </div>
 
-  
+  <!-- Firebase + Juego -->
   <script type="module">
-    
+    /* ---------------- Fondo con moñitos ---------------- */
     const bowsToGenerate = 22;
     for(let i=0;i<bowsToGenerate;i++){
       const img=document.createElement("img");
       img.src="mono.png"; img.alt="fondo";
       img.className="bow";
-      const size=Math.random()*280+200;   
+      const size=Math.random()*280+200;   // más dispersos
       img.style.width=size+"px";
-      img.style.opacity=(Math.random()*0.25+0.25).toFixed(2); 
+      img.style.opacity=(Math.random()*0.25+0.25).toFixed(2); // 25% - 50% (15% más intenso)
       img.style.left=(Math.random()*100)+"vw";
       img.style.top=(Math.random()*100)+"vh";
       const rot=Math.random()*60-30;
@@ -116,7 +116,7 @@
       document.body.appendChild(img);
     }
 
-   
+    /* ---------------- UI refs ---------------- */
     const grid = document.getElementById('grid');
     const wrap = document.querySelector('.board-wrap');
     const winLine = document.getElementById('winLine');
@@ -133,7 +133,7 @@
     const statusEl = document.getElementById('status');
     const rolPill = document.getElementById('rolPill');
 
-    
+    /* ---------------- Estado local ---------------- */
     const state = { board: Array(9).fill(''), xTurn: true, lock: false };
     let puntosX = 0, puntosO = 0;
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -194,7 +194,7 @@
     resetBtn.onclick = ()=>{ puntosX=0; puntosO=0; scoreXEl.textContent='X: 0'; scoreOEl.textContent='O: 0'; tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(true); };
     nuevoBtn.onclick = ()=>{ tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(false,true); };
 
-    
+    /* ---------------- Firebase ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -210,7 +210,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let mySymbol = null;       
+    let mySymbol = null;       // 'X' | 'O' | null (espectador)
     let roomCode = null;
     let roomRef = null;
     let unsub = null;
@@ -248,7 +248,7 @@
           await update(roomRef, { ['players/O']: nombre });
           statusEl.textContent='Te uniste como O';
         } else {
-          mySymbol=null; 
+          mySymbol=null; // espectador
           statusEl.textContent='Sala llena (serás espectador)';
         }
       }
@@ -259,10 +259,10 @@
     joinBtn.onclick = joinOrCreateRoom;
 
     function subscribeRoom(){
-      if (unsub) unsub(); 
+      if (unsub) unsub(); // simple guard (con onValue devolvemos otra función)
       const off = onValue(roomRef, snap=>{
         const d = snap.val(); if(!d) return;
-        
+        // sincronizar estado local
         state.board = d.board || Array(9).fill('');
         state.xTurn = d.xTurn ?? true;
         state.lock = !!d.winner;
@@ -272,9 +272,9 @@
         scoreOEl.textContent='O: '+puntosO;
 
         dibujar();
-  
+        // si hay ganador, remarcar visualmente
         if (d.winner){
-          
+          // recalcar casillas ganadoras si vienen (simple: recalcular)
           const cells = cellEls();
           for (const w of wins){
             const [a,b,c]=w;
@@ -296,13 +296,13 @@
     async function pushStateToDB(resetScores=false, onlyBoard=false){
       if (!roomRef) return;
       const upd = { board: state.board, xTurn: state.xTurn, winner: state.lock? (checkLocalWin()||null) : null };
-      
+      // checkLocalWin marca visual local; no subir doble. Volvemos a calcular:
       const w = calcWinner(state.board);
       upd.winner = w;
       if (resetScores) upd.scores = { X:0, O:0 };
       if (w==='X') upd['scores/X'] = (puntosX);
       if (w==='O') upd['scores/O'] = (puntosO);
-      if (w==='empate'){} 
+      if (w==='empate'){} // no cambia marcador
       await update(roomRef, upd);
     }
 
@@ -316,7 +316,7 @@
 
     async function clickCell(i){
       if (state.lock) return;
-      if (!roomRef){ 
+      if (!roomRef){ // offline
         if (state.board[i]) return;
         state.board[i] = state.xTurn ? 'X' : 'O';
         state.xTurn = !state.xTurn;
@@ -324,8 +324,8 @@
         const w = checkLocalWin();
         return;
       }
-      
-      if (!mySymbol){ return; } 
+      // online: validar turno y símbolo
+      if (!mySymbol){ return; } // espectador
       if (state.board[i]) return;
       const me = mySymbol;
       const myTurn = state.xTurn ? (me==='X') : (me==='O');
@@ -340,7 +340,8 @@
       state.lock = !!w;
       await pushStateToDB(false,true);
     }
-    
+
+    // Recalcular línea al cambiar tamaño
     window.addEventListener('resize', ()=>{
       if (winLine.classList.contains('show')){
         const cells = cellEls();
@@ -349,10 +350,8 @@
       }
     });
     
+    // Render inicial
     dibujar();
   </script>
 </body>
 </html>
-
-
-
