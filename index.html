@@ -22,7 +22,7 @@
     .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(1.15);}
     
     .app{width:100%; max-width:540px}
-    .card{background:var(--card); backdrop-filter:blur(6px); border:1px solid rgba(0,0,0,.06);
+    .card{background:var(255,255,255,0.60); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.60);
       border-radius:16px; padding:16px; box-shadow:0 6px 28px rgba(0,0,0,.12)}
     header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
     h1{margin:0; font-size:20px}
@@ -40,7 +40,7 @@
     #status{margin:8px 0; color:var(--mut); font-size:14px}
 
     .board-wrap{position:relative}
-    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px}
     .cell{
       aspect-ratio:1/1; border-radius:12px; background:#fff; border:1px solid var(--grid);
       display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:800;
@@ -52,8 +52,8 @@
     .cell.win{outline:2px solid var(--acc); box-shadow:0 0 0 3px rgba(255,183,77,.16) inset}
 
     .win-line{
-      position:absolute; left:0; top:0; height:4px; background:var(--acc);
-      transform-origin:0 50%; border-radius:3px; box-shadow:0 0 12px rgba(255,183,77,.4);
+      position:absolute; left:0; top:0; height:4px; background:var(255,183,77,0.95);
+      transform-origin:0 50%; border-radius:3px; box-shadow:0 0 12px rgba(255,183,77,.45);
       pointer-events:none; opacity:0; transition:opacity .15s ease;
     }
     .win-line.show{opacity:1}
@@ -353,3 +353,4 @@
   </script>
 </body>
 </html>
+
