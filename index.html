@@ -1,358 +1,249 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Gatito</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <style>
-    :root{
-      --bg:#ffffff; --card:rgba(255,255,255,.85); --grid:#d0d0d6;
-      --x:#06d6a0; --o:#ef476f; --txt:#111; --mut:#6b6b74; --acc:#ffb74d;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--txt);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
-      display:flex; align-items:center; justify-content:center; padding:16px; min-height:100vh;
-      background:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Gatito</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --card:rgba(255,255,255,0.60);
+  --grid:#dddddd;
+  --x:#12a979;
+  --o:#ff5577;
+  --txt:#111;
+  --mut:#55f568;
+  --acc:#ffb74d;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--txt);
+  font-family:system-ui,apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:#fff;
+  -webkit-font-smoothing:antialiased;
+  background-image:url("mono.png");
+  background-size:cover;
+  background-position:center;
+}
 
-    /* Fondo con moñitos dispersos */
-    .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(1.15);}
-    
-    .app{width:100%; max-width:540px}
-    .card{background:var(--card); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.06);
-      border-radius:16px; padding:16px; box-shadow:0 6px 28px rgba(0,0,0,.12)}
-    header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
-    h1{margin:0; font-size:20px}
-
-    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    input,select,button{
-      appearance:none; border:1px solid var(--grid); background:#fff; color:var(--txt);
-      padding:10px 12px; border-radius:10px; font-size:14px;
-    }
-    input{flex:1; min-width:0}
-    button{cursor:pointer}
-    button.primary{background:linear-gradient(180deg,#f6f6f9,#eee); border-color:#cfcfde}
-    .pill{padding:6px 10px; border-radius:999px; background:#fff; border:1px solid var(--grid); font-size:12px; color:#444}
-
-    #status{margin:8px 0; color:var(--mut); font-size:14px}
-
-    .board-wrap{position:relative}
-    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
-    .cell{
-      aspect-ratio:1/1; border-radius:12px; background:#fff; border:1px solid var(--grid);
-      display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:800;
-      cursor:pointer; user-select:none; transition:transform .08s ease, background .2s ease;
-    }
-    .cell:active{transform:scale(.98)}
-    .cell.x{color:var(--x)}
-    .cell.o{color:var(--o)}
-    .cell.win{outline:2px solid var(--acc); box-shadow:0 0 0 3px rgba(255,183,77,.16) inset}
-
-    .win-line{
-      position:absolute; left:0; top:0; height:4px; background:var(--acc);
-      transform-origin:0 50%; border-radius:3px; box-shadow:0 0 12px rgba(255,183,77,.4);
-      pointer-events:none; opacity:0; transition:opacity .15s ease;
-    }
-    .win-line.show{opacity:1}
-
-    .meta{margin-top:12px; color:var(--mut); font-size:14px; display:flex; justify-content:space-between; align-items:center}
-  </style>
+.app{width:100%; max-width:520px}
+.card{
+  background:var(--card);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 6px 28px rgba(0,0,0,.12);
+}
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+h1{margin:0; font-size:20px}
+.row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+input,select,button{
+  appearance:none;
+  border:1px solid var(--grid);
+  background:#fff;
+  color:var(--txt);
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:14px;
+}
+input{flex:1; min-width:0}
+button{cursor:pointer}
+button.primary{
+  background:linear-gradient(108deg,#f6f9f9,#eee);
+  border-color:#cfcfde;
+}
+.pill{
+  padding:6px 10px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid var(--grid);
+  font-size:12px;
+  color:#444;
+}
+#status{margin:8px 0; color:var(--mut); font-size:14px}
+.board-wrap{position:relative}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+.cell{
+  aspect-ratio:1/1;
+  border-radius:12px;
+  background:rgba(255,255,255,0.55);
+  border:1px solid rgba(0,0,0,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  font-weight:800;
+  cursor:pointer;
+  user-select:none;
+  transition:.08s ease;
+}
+.cell:active{transform:scale(.98)}
+.cell.x{color:var(--x)}
+.cell.o{color:var(--o)}
+.cell.win{
+  outline:2px solid var(--acc);
+  box-shadow:0 0 3px rgba(255,183,77,.16) inset;
+}
+.win-line{
+  position:absolute;
+  top:0; left:0;
+  height:4px;
+  background:rgba(255,183,77,0.95);
+  box-shadow:0 0 12px rgba(255,183,77,.45);
+  transform-origin:left center;
+  transform:scaleX(0);
+  transition:transform .4s ease;
+}
+</style>
 </head>
 <body>
-  <!-- moñitos (se inyectan por JS) -->
-
-  <div class="app">
-    <div class="card">
-      <header>
-        <h1>Gatito</h1>
-        <div class="row" id="marcador">
-          <span class="pill" id="scoreX">X: 0</span>
-          <span class="pill" id="scoreO">O: 0</span>
-        </div>
-      </header>
-
-      <!-- Sala privada -->
-      <div class="row" id="lobby">
-        <input id="nombre" placeholder="Tu nombre">
-        <input id="codigo" placeholder="Código de sala (ej: sophia15)">
-        <button id="joinBtn" class="primary">Unirme / Crear</button>
-        <span class="pill" id="rolPill">—</span>
+<div class="app">
+  <div class="card">
+    <header>
+      <h1>Gatito</h1>
+      <div class="row">
+        <div class="pill">✕: <span id="scoreX">0</span></div>
+        <div class="pill">○: <span id="scoreO">0</span></div>
       </div>
-      <div id="status">Sin sala</div>
-
-      <div class="board-wrap">
-        <div id="grid" class="grid"></div>
-        <div id="winLine" class="win-line"></div>
-      </div>
-
-      <div class="meta">
-        <span id="turno">Turno de X</span>
-        <div class="row">
-          <button id="reset">Reiniciar</button>
-          <button id="nuevo" class="primary">Partida nueva</button>
-        </div>
-      </div>
+    </header>
+    <div class="row">
+      <input id="nameX" placeholder="Nombre X">
+      <input id="nameO" placeholder="Nombre O">
+    </div>
+    <div id="status">Turno de X</div>
+    <div class="board-wrap">
+      <div class="grid" id="grid"></div>
+      <div class="win-line" id="line"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="reset">Reiniciar</button>
+      <button id="new">Partida nueva</button>
     </div>
   </div>
+</div>
 
-  <!-- Firebase + Juego -->
-  <script type="module">
-    /* ---------------- Fondo con moñitos ---------------- */
-    const bowsToGenerate = 32;
-    for(let i=0;i<bowsToGenerate;i++){
-      const img=document.createElement("img");
-      img.src="mono.png"; img.alt="fondo";
-      img.className="bow";
-      const size=Math.random()*160+120;   // más dispersos
-      img.style.width=size+"px";
-      img.style.opacity=(Math.random()*0.25+0.25).toFixed(2); // 25% - 50% (15% más intenso)
-      img.style.left=(Math.random()*100)+"vw";
-      img.style.top=(Math.random()*100)+"vh";
-      const rot=Math.random()*60-30;
-      img.style.transform=`rotate(${rot}deg)`;
-      document.body.appendChild(img);
-    }
+<script>
+const grid = document.getElementById("grid");
+const statusEl = document.getElementById("status");
+const lineEl = document.getElementById("line");
+const nameX = document.getElementById("nameX");
+const nameO = document.getElementById("nameO");
+const scoreX = document.getElementById("scoreX");
+const scoreO = document.getElementById("scoreO");
+const resetBtn = document.getElementById("reset");
+const newBtn = document.getElementById("new");
 
-    /* ---------------- UI refs ---------------- */
-    const grid = document.getElementById('grid');
-    const wrap = document.querySelector('.board-wrap');
-    const winLine = document.getElementById('winLine');
+let board = Array(9).fill("");
+let xTurn = true;
+let lock = false;
+let puntosX = 0;
+let puntosO = 0;
 
-    const turnoTexto = document.getElementById('turno');
-    const resetBtn = document.getElementById('reset');
-    const nuevoBtn = document.getElementById('nuevo');
-    const scoreXEl = document.getElementById('scoreX');
-    const scoreOEl = document.getElementById('scoreO');
+for(let i=0;i<9;i++){
+  const cell=document.createElement("div");
+  cell.className="cell";
+  cell.onclick=()=>clickCell(i);
+  grid.appendChild(cell);
+}
 
-    const nombreInput = document.getElementById('nombre');
-    const codigoInput = document.getElementById('codigo');
-    const joinBtn = document.getElementById('joinBtn');
-    const statusEl = document.getElementById('status');
-    const rolPill = document.getElementById('rolPill');
+function clickCell(i){
+  if(lock||board[i]!="")return;
+  board[i]=xTurn?"X":"O";
+  dibujar();
+  const w=calcWinner();
+  if(w){marcarGanador(w);return;}
+  xTurn=!xTurn;
+  statusEl.textContent="Turno de "+(xTurn?"X":"O");
+}
 
-    /* ---------------- Estado local ---------------- */
-    const state = { board: Array(9).fill(''), xTurn: true, lock: false };
-    let puntosX = 0, puntosO = 0;
-    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    function cellEls(){ return [...document.querySelectorAll('.cell')]; }
-    function dibujar(){
-      grid.innerHTML='';
-      for (let i=0;i<9;i++){
-        const b=document.createElement('button');
-        b.className='cell ' + (state.board[i]==='X'?'x': state.board[i]==='O'?'o':'');
-        b.textContent=state.board[i];
-        b.dataset.i=i;
-        b.onclick=()=>clickCell(i);
-        grid.appendChild(b);
-      }
-      turnoTexto.textContent = 'Turno de ' + (state.xTurn ? 'X' : 'O');
-      winLine.classList.remove('show'); winLine.style.width='0px';
-    }
+function dibujar(){
+  for(let i=0;i<9;i++){
+    grid.children[i].textContent=board[i];
+    grid.children[i].className="cell "+(board[i]?board[i].toLowerCase():"");
+  }
+}
 
-    function drawWinLine(a,c){
-      const cells = cellEls();
-      const r1=cells[a].getBoundingClientRect(), r2=cells[c].getBoundingClientRect(), rw=wrap.getBoundingClientRect();
-      const x1=(r1.left+r1.right)/2 - rw.left, y1=(r1.top+r1.bottom)/2 - rw.top;
-      const x2=(r2.left+r2.right)/2 - rw.left, y2=(r2.top+r2.bottom)/2 - rw.top;
-      const dx=x2-x1, dy=y2-y1, dist=Math.sqrt(dx*dx+dy*dy), ang=Math.atan2(dy,dx)*180/Math.PI;
-      winLine.style.left=x1+'px'; winLine.style.top=y1+'px'; winLine.style.width=dist+'px'; winLine.style.transform=`rotate(${ang}deg)`;
-      winLine.classList.add('show');
-    }
+function calcWinner(){
+  const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const [a,b,c] of w){
+    if(board[a]&&board[a]==board[b]&&board[a]==board[c])return[a,b,c];
+  }
+  return null;
+}
 
-    function checkLocalWin(){
-      const cells = cellEls();
-      for (const w of wins){
-        const [a,b,c]=w;
-        if (state.board[a] && state.board[a]===state.board[b] && state.board[a]===state.board[c]){
-          state.lock = true;
-          [a,b,c].forEach(i=>cells[i].classList.add('win'));
-          drawWinLine(a,c);
-          const g=state.board[a];
-          if (g==='X'){ puntosX++; scoreXEl.textContent='X: '+puntosX; }
-          else { puntosO++; scoreOEl.textContent='O: '+puntosO; }
-          turnoTexto.innerHTML = 'Ganó <b>'+g+'</b> 🎉';
-          return g;
-        }
-      }
-      if (state.board.every(v=>v)){
-        state.lock=true; turnoTexto.textContent='Empate 😐';
-        return 'empate';
-      }
-      return null;
-    }
+function marcarGanador(w){
+  lock=true;
+  for(const i of w)grid.children[i].classList.add("win");
+  const winner=board[w[0]];
+  if(winner=="X")puntosX++;
+  else puntosO++;
+  scoreX.textContent=puntosX;
+  scoreO.textContent=puntosO;
+  statusEl.textContent="Ganó "+winner+"!";
+  setTimeout(()=>{lineaGanadora(w);},200);
+}
 
-    function tableroNuevo(){
-      state.board = Array(9).fill('');
-      state.xTurn = true;
-      state.lock = false;
-      cellEls().forEach(c=>c.classList.remove('win'));
-      dibujar();
-    }
-    resetBtn.onclick = ()=>{ puntosX=0; puntosO=0; scoreXEl.textContent='X: 0'; scoreOEl.textContent='O: 0'; tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(true); };
-    nuevoBtn.onclick = ()=>{ tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(false,true); };
+function lineaGanadora(w){
+  const pos=[
+    [50,10,0],
+    [50,50,0],
+    [50,90,0],
+    [10,50,90],
+    [50,50,90],
+    [90,50,90],
+    [50,50,45],
+    [50,50,-45]
+  ];
+  const i=[0,1,2,3,4,5,6,7].find(j=>{
+    const set=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return JSON.stringify(set[j])==JSON.stringify(w);
+  });
+  if(i!=undefined){
+    lineEl.style.top=pos[i][1]+"%";
+    lineEl.style.left=pos[i][0]+"%";
+    lineEl.style.transform="rotate("+pos[i][2]+"deg) scaleX(1)";
+  }
+}
 
-    /* ---------------- Firebase ---------------- */
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDixq2ym7atz_qNqfFk1ku6cof8WIVjhGW",
-      authDomain: "gatoo-c9904.firebaseapp.com",
-      projectId: "gatoo-c9904",
-      storageBucket: "gatoo-c9904.firebasestorage.app",
-      messagingSenderId: "885513132043",
-      appId: "1:885513132043:web:d17df98bc26b528f8f0f0e",
-      measurementId: "G-V168Y4XES"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let mySymbol = null;       // 'X' | 'O' | null (espectador)
-    let roomCode = null;
-    let roomRef = null;
-    let unsub = null;
-
-    async function joinOrCreateRoom(){
-      const nombre = nombreInput.value.trim() || 'Jugador';
-      const code = (codigoInput.value || '').trim().toLowerCase();
-      if (!code) { statusEl.textContent='Escribe un código de sala'; return; }
-
-      roomCode = code;
-      roomRef = ref(db, 'rooms/'+code);
-
-      const snap = await get(roomRef);
-      if (!snap.exists()){
-        // crear sala
-        mySymbol = 'X';
-        await set(roomRef, {
-          createdAt: Date.now(),
-          board: Array(9).fill(''),
-          xTurn: true,
-          winner: null,
-          players: { X: nombre },
-          scores: { X: 0, O: 0 }
-        });
-        statusEl.textContent='Sala creada: '+code+' — eres X';
-      }else{
-        const data = snap.val();
-        const players = data.players || {};
-        if (!players.X){
-          mySymbol='X';
-          await update(roomRef, { ['players/X']: nombre });
-          statusEl.textContent='Te uniste como X';
-        } else if (!players.O){
-          mySymbol='O';
-          await update(roomRef, { ['players/O']: nombre });
-          statusEl.textContent='Te uniste como O';
-        } else {
-          mySymbol=null; // espectador
-          statusEl.textContent='Sala llena (serás espectador)';
-        }
-      }
-      rolPill.textContent = mySymbol ? `Tú: ${mySymbol}` : 'Tú: espectador';
-      subscribeRoom();
-    }
-
-    joinBtn.onclick = joinOrCreateRoom;
-
-    function subscribeRoom(){
-      if (unsub) unsub(); // simple guard (con onValue devolvemos otra función)
-      const off = onValue(roomRef, snap=>{
-        const d = snap.val(); if(!d) return;
-        // sincronizar estado local
-        state.board = d.board || Array(9).fill('');
-        state.xTurn = d.xTurn ?? true;
-        state.lock = !!d.winner;
-        puntosX = d.scores?.X || 0;
-        puntosO = d.scores?.O || 0;
-        scoreXEl.textContent='X: '+puntosX;
-        scoreOEl.textContent='O: '+puntosO;
-
-        dibujar();
-        // si hay ganador, remarcar visualmente
-        if (d.winner){
-          // recalcar casillas ganadoras si vienen (simple: recalcular)
-          const cells = cellEls();
-          for (const w of wins){
-            const [a,b,c]=w;
-            if (state.board[a] && state.board[a]===state.board[b] && state.board[a]===state.board[c]){
-              [a,b,c].forEach(i=>cells[i].classList.add('win'));
-              drawWinLine(a,c);
-              break;
-            }
-          }
-          if (d.winner==='empate'){ turnoTexto.textContent='Empate 😐'; }
-          else { turnoTexto.innerHTML='Ganó <b>'+d.winner+'</b> 🎉'; }
-        } else {
-          turnoTexto.textContent='Turno de '+(state.xTurn?'X':'O');
-        }
-      });
-      unsub = ()=>off();
-    }
-
-    async function pushStateToDB(resetScores=false, onlyBoard=false){
-      if (!roomRef) return;
-      const upd = { board: state.board, xTurn: state.xTurn, winner: state.lock? (checkLocalWin()||null) : null };
-      // checkLocalWin marca visual local; no subir doble. Volvemos a calcular:
-      const w = calcWinner(state.board);
-      upd.winner = w;
-      if (resetScores) upd.scores = { X:0, O:0 };
-      if (w==='X') upd['scores/X'] = (puntosX);
-      if (w==='O') upd['scores/O'] = (puntosO);
-      if (w==='empate'){} // no cambia marcador
-      await update(roomRef, upd);
-    }
-
-    function calcWinner(b){
-      for (const [a,b2,c] of wins){
-        if (b[a] && b[a]===b[b2] && b[a]===b[c]) return b[a];
-      }
-      if (b.every(v=>v)) return 'empate';
-      return null;
-    }
-
-    async function clickCell(i){
-      if (state.lock) return;
-      if (!roomRef){ // offline
-        if (state.board[i]) return;
-        state.board[i] = state.xTurn ? 'X' : 'O';
-        state.xTurn = !state.xTurn;
-        dibujar();
-        const w = checkLocalWin();
-        return;
-      }
-      // online: validar turno y símbolo
-      if (!mySymbol){ return; } // espectador
-      if (state.board[i]) return;
-      const me = mySymbol;
-      const myTurn = state.xTurn ? (me==='X') : (me==='O');
-      if (!myTurn) return;
-
-      state.board[i] = me;
-      state.xTurn = !state.xTurn;
-      dibujar();
-      const w = calcWinner(state.board);
-      if (w==='X'){ puntosX++; }
-      if (w==='O'){ puntosO++; }
-      state.lock = !!w;
-      await pushStateToDB(false,true);
-    }
-
-    // Recalcular línea al cambiar tamaño
-    window.addEventListener('resize', ()=>{
-      if (winLine.classList.contains('show')){
-        const cells = cellEls();
-        const idxs = cells.map((c,i)=> c.classList.contains('win') ? i : -1).filter(i=>i!==-1);
-        if (idxs.length===3){ drawWinLine(idxs[0], idxs[2]); }
-      }
-    });
-    
-    // Render inicial
-    dibujar();
-  </script>
+resetBtn.onclick=()=>{
+  board=Array(9).fill("");
+  xTurn=true;
+  lock=false;
+  lineEl.style.transform="scaleX(0)";
+  for(const c of grid.children)c.className="cell";
+  dibujar();
+  statusEl.textContent="Turno de X";
+};
+newBtn.onclick=()=>{
+  puntosX=0;puntosO=0;
+  scoreX.textContent="0";
+  scoreO.textContent="0";
+  resetBtn.onclick();
+};
+dibujar();
+</script>
 </body>
 </html>
-
