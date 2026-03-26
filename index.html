@@ -284,9 +284,10 @@
     joinBtn.onclick = joinOrCreateRoom;
 
     function subscribeRoom(){
-      if (unsub) unsub(); // simple guard (con onValue devolvemos otra función)
+      if (unsub) unsub(); 
       const off = onValue(roomRef, snap=>{
         const d = snap.val(); if(!d) return;
+        
         // sincronizar estado local
         state.board = d.board || Array(9).fill('');
         state.xTurn = d.xTurn ?? true;
@@ -297,9 +298,14 @@
         scoreOEl.textContent='O: '+puntosO;
 
         dibujar();
+        
         // si hay ganador, remarcar visualmente
         if (d.winner){
-          // recalcar casillas ganadoras si vienen (simple: recalcular)
+          
+          // ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA! 
+          // Ahora ambos jugadores saben quién ganó para la revancha:
+          ultimoGanador = d.winner; 
+          
           const cells = cellEls();
           for (const w of wins){
             const [a,b,c]=w;
