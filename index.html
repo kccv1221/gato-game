@@ -136,6 +136,7 @@
     /* ---------------- Estado local ---------------- */
     const state = { board: Array(9).fill(''), xTurn: true, lock: false };
     let puntosX = 0, puntosO = 0;
+    let ultimoGanador = null;
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     function cellEls(){ return [...document.querySelectorAll('.cell')]; }
     function dibujar(){
@@ -171,6 +172,7 @@
           [a,b,c].forEach(i=>cells[i].classList.add('win'));
           drawWinLine(a,c);
           const g=state.board[a];
+          ultimoGanador = g;
           if (g==='X'){ puntosX++; scoreXEl.textContent='X: '+puntosX; }
           else { puntosO++; scoreOEl.textContent='O: '+puntosO; }
           turnoTexto.innerHTML = 'Ganó <b>'+g+'</b> 🎉';
@@ -184,13 +186,23 @@
       return null;
     }
 
-    function tableroNuevo(){
-      state.board = Array(9).fill('');
-      state.xTurn = true;
-      state.lock = false;
-      cellEls().forEach(c=>c.classList.remove('win'));
-      dibujar();
-    }
+   function tableroNuevo(){
+  state.board = Array(9).fill('');
+  state.lock = false;
+
+  // Si X ganó la anterior, ahora empieza O (false). Si no, empieza X (true).
+  if (ultimoGanador === 'X') {
+    state.xTurn = false; 
+  } else if (ultimoGanador === 'O') {
+    state.xTurn = true;
+  } else {
+    // Si fue empate, que rote el turno para que sea variado
+    state.xTurn = !state.xTurn; 
+  }
+
+  cellEls().forEach(c => c.classList.remove('win'));
+  dibujar();
+}
     resetBtn.onclick = ()=>{ puntosX=0; puntosO=0; scoreXEl.textContent='X: 0'; scoreOEl.textContent='O: 0'; tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(true); };
     nuevoBtn.onclick = ()=>{ tableroNuevo(); turnoTexto.textContent='Turno de X'; if(roomRef) pushStateToDB(false,true); };
 
