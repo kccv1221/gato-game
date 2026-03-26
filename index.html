@@ -18,7 +18,6 @@
       background:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
-    /* Fondo con moñitos dispersos */
     .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(2);}
     
     .app{width:100%; max-width:540px}
@@ -74,8 +73,8 @@
 
       <div class="row" id="lobby">
         <input id="nombre" placeholder="Tu nombre">
-        <input id="codigo" placeholder="Código de sala (ej: sophia15)">
-        <button id="joinBtn" class="primary">Unirme / Crear</button>
+        <input id="codigo" placeholder="Código de sala">
+        <button id="joinBtn" class="primary">Unirme</button>
         <span class="pill" id="rolPill">—</span>
       </div>
       <div id="status">Sin sala</div>
@@ -102,9 +101,9 @@
       const img=document.createElement("img");
       img.src="mono.png"; img.alt="fondo";
       img.className="bow";
-      const size=Math.random()*280+200;   // más dispersos
+      const size=Math.random()*280+200;
       img.style.width=size+"px";
-      img.style.opacity=(Math.random()*0.25+0.25).toFixed(2); // 25% - 50% (15% más intenso)
+      img.style.opacity=(Math.random()*0.25+0.25).toFixed(2);
       img.style.left=(Math.random()*100)+"vw";
       img.style.top=(Math.random()*100)+"vh";
       const rot=Math.random()*60-30;
@@ -116,13 +115,11 @@
     const grid = document.getElementById('grid');
     const wrap = document.querySelector('.board-wrap');
     const winLine = document.getElementById('winLine');
-
     const turnoTexto = document.getElementById('turno');
     const resetBtn = document.getElementById('reset');
     const nuevoBtn = document.getElementById('nuevo');
     const scoreXEl = document.getElementById('scoreX');
     const scoreOEl = document.getElementById('scoreO');
-
     const nombreInput = document.getElementById('nombre');
     const codigoInput = document.getElementById('codigo');
     const joinBtn = document.getElementById('joinBtn');
@@ -132,7 +129,7 @@
     /* ---------------- Estado local ---------------- */
     const state = { board: Array(9).fill(''), xTurn: true, lock: false };
     let puntosX = 0, puntosO = 0;
-    let ultimoGanador = null; // Variable agregada para la revancha
+    let ultimoGanador = null; 
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     
     function cellEls(){ return [...document.querySelectorAll('.cell')]; }
@@ -143,12 +140,11 @@
         const b=document.createElement('button');
         b.className='cell ' + (state.board[i]==='X'?'x': state.board[i]==='O'?'o':'');
         b.textContent=state.board[i];
-        b.dataset.i=i;
         b.onclick=()=>clickCell(i);
         grid.appendChild(b);
       }
       turnoTexto.textContent = 'Turno de ' + (state.xTurn ? 'X' : 'O');
-      winLine.classList.remove('show'); winLine.style.width='0px';
+      winLine.classList.remove('show');
     }
 
     function drawWinLine(a,c){
@@ -161,58 +157,24 @@
       winLine.classList.add('show');
     }
 
-    function checkLocalWin(){
-      const cells = cellEls();
-      for (const w of wins){
-        const [a,b,c]=w;
-        if (state.board[a] && state.board[a]===state.board[b] && state.board[a]===state.board[c]){
-          state.lock = true;
-          [a,b,c].forEach(i=>cells[i].classList.add('win'));
-          drawWinLine(a,c);
-          const g=state.board[a];
-          
-          ultimoGanador = g; // Aquí guardamos el ganador
-          
-          if (g==='X'){ puntosX++; scoreXEl.textContent='X: '+puntosX; }
-          else { puntosO++; scoreOEl.textContent='O: '+puntosO; }
-          turnoTexto.innerHTML = 'Ganó <b>'+g+'</b> 🎉';
-          return g;
-        }
-      }
-      if (state.board.every(v=>v)){
-        state.lock=true; turnoTexto.textContent='Empate 😐';
-        ultimoGanador = 'empate'; // En empate, que rote el turno
-        return 'empate';
-      }
-      return null;
-    }
-
     function tableroNuevo(){
       state.board = Array(9).fill('');
       state.lock = false;
 
-      // Lógica de revancha: Si el último fue X, ahora es O. Si fue O, ahora es X.
+      // Lógica de revancha: el que ganó NO empieza.
       if (ultimoGanador === 'X') {
-        state.xTurn = false; 
+        state.xTurn = false; // Empieza O
       } else if (ultimoGanador === 'O') {
-        state.xTurn = true;
+        state.xTurn = true;  // Empieza X
       } else {
-        // Por si acaso no hay ganador previo, solo invierte el que estaba
         state.xTurn = !state.xTurn; 
       }
 
-      // IMPORTANTE: Limpiamos la variable para que la próxima partida 
-      // no use un ganador "viejo" si algo falla
-      ultimoGanador = null; 
-
-      cellEls().forEach(c => c.classList.remove('win'));
       dibujar();
     }
 
-    // Aquí reparamos los botones
     resetBtn.onclick = ()=>{ 
       puntosX=0; puntosO=0; 
-      scoreXEl.textContent='X: 0'; scoreOEl.textContent='O: 0'; 
       ultimoGanador = null; 
       state.xTurn = true; 
       tableroNuevo(); 
@@ -221,7 +183,9 @@
     
     nuevoBtn.onclick = ()=>{ 
       tableroNuevo(); 
-      if(roomRef) pushStateToDB(false,true); 
+      if(roomRef) pushStateToDB(false); 
+      // Limpiamos después de subirlo a Firebase
+      ultimoGanador = null;
     };
 
     /* ---------------- Firebase ---------------- */
@@ -240,105 +204,64 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let mySymbol = null;       // 'X' | 'O' | null (espectador)
-    let roomCode = null;
+    let mySymbol = null;
     let roomRef = null;
     let unsub = null;
 
     async function joinOrCreateRoom(){
       const nombre = nombreInput.value.trim() || 'Jugador';
       const code = (codigoInput.value || '').trim().toLowerCase();
-      if (!code) { statusEl.textContent='Escribe un código de sala'; return; }
-
-      roomCode = code;
+      if (!code) return;
       roomRef = ref(db, 'rooms/'+code);
-
       const snap = await get(roomRef);
       if (!snap.exists()){
-        // crear sala
         mySymbol = 'X';
-        await set(roomRef, {
-          createdAt: Date.now(),
-          board: Array(9).fill(''),
-          xTurn: true,
-          winner: null,
-          players: { X: nombre },
-          scores: { X: 0, O: 0 }
-        });
-        statusEl.textContent='Sala creada: '+code+' — eres X';
+        await set(roomRef, { board: Array(9).fill(''), xTurn: true, winner: null, players: { X: nombre }, scores: { X: 0, O: 0 } });
       }else{
-        const data = snap.val();
-        const players = data.players || {};
-        if (!players.X){
-          mySymbol='X';
-          await update(roomRef, { ['players/X']: nombre });
-          statusEl.textContent='Te uniste como X';
-        } else if (!players.O){
-          mySymbol='O';
-          await update(roomRef, { ['players/O']: nombre });
-          statusEl.textContent='Te uniste como O';
-        } else {
-          mySymbol=null; // espectador
-          statusEl.textContent='Sala llena (serás espectador)';
-        }
+        const players = snap.val().players || {};
+        if (!players.X){ mySymbol='X'; await update(roomRef, { 'players/X': nombre }); }
+        else if (!players.O){ mySymbol='O'; await update(roomRef, { 'players/O': nombre }); }
+        else { mySymbol=null; }
       }
-      rolPill.textContent = mySymbol ? `Tú: ${mySymbol}` : 'Tú: espectador';
+      rolPill.textContent = mySymbol ? `Tú: ${mySymbol}` : 'Espectador';
       subscribeRoom();
     }
-
     joinBtn.onclick = joinOrCreateRoom;
 
     function subscribeRoom(){
-      if (unsub) unsub(); 
-      const off = onValue(roomRef, snap=>{
+      onValue(roomRef, snap=>{
         const d = snap.val(); if(!d) return;
-        
-        // sincronizar estado local
         state.board = d.board || Array(9).fill('');
-        state.xTurn = d.xTurn ?? true;
+        state.xTurn = d.xTurn;
         state.lock = !!d.winner;
         puntosX = d.scores?.X || 0;
         puntosO = d.scores?.O || 0;
         scoreXEl.textContent='X: '+puntosX;
         scoreOEl.textContent='O: '+puntosO;
-
         dibujar();
-        
-        // si hay ganador, remarcar visualmente
-        if (d.winner){
-          
-          // ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA! 
-          // Ahora ambos jugadores saben quién ganó para la revancha:
-          ultimoGanador = d.winner; 
-          
-          const cells = cellEls();
-          for (const w of wins){
-            const [a,b,c]=w;
-            if (state.board[a] && state.board[a]===state.board[b] && state.board[a]===state.board[c]){
-              [a,b,c].forEach(i=>cells[i].classList.add('win'));
-              drawWinLine(a,c);
-              break;
+        if (d.winner && d.winner !== 'empate'){
+          ultimoGanador = d.winner;
+          wins.forEach(w=>{
+            if(state.board[w[0]] && state.board[w[0]]===state.board[w[1]] && state.board[w[0]]===state.board[w[2]]){
+              drawWinLine(w[0], w[2]);
             }
-          }
-          if (d.winner==='empate'){ turnoTexto.textContent='Empate 😐'; }
-          else { turnoTexto.innerHTML='Ganó <b>'+d.winner+'</b> 🎉'; }
-        } else {
-          turnoTexto.textContent='Turno de '+(state.xTurn?'X':'O');
+          });
+          turnoTexto.innerHTML = `Ganó <b>${d.winner}</b> 🎉`;
+        } else if (d.winner === 'empate') {
+          turnoTexto.textContent = 'Empate 😐';
         }
       });
-      unsub = ()=>off();
     }
 
-    async function pushStateToDB(resetScores=false, onlyBoard=false){
+    async function pushStateToDB(resetScores=false){
       if (!roomRef) return;
-      const upd = { board: state.board, xTurn: state.xTurn, winner: state.lock? (checkLocalWin()||null) : null };
-      // checkLocalWin marca visual local; no subir doble. Volvemos a calcular:
       const w = calcWinner(state.board);
-      upd.winner = w;
+      const upd = { board: state.board, xTurn: state.xTurn, winner: w };
       if (resetScores) upd.scores = { X:0, O:0 };
-      if (w==='X') upd['scores/X'] = (puntosX);
-      if (w==='O') upd['scores/O'] = (puntosO);
-      if (w==='empate'){} // no cambia marcador
+      else {
+        if (w==='X') upd['scores/X'] = puntosX;
+        if (w==='O') upd['scores/O'] = puntosO;
+      }
       await update(roomRef, upd);
     }
 
@@ -346,48 +269,22 @@
       for (const [a,b2,c] of wins){
         if (b[a] && b[a]===b[b2] && b[a]===b[c]) return b[a];
       }
-      if (b.every(v=>v)) return 'empate';
-      return null;
+      return b.every(v=>v) ? 'empate' : null;
     }
 
     async function clickCell(i){
-      if (state.lock) return;
-      if (!roomRef){ // offline
-        if (state.board[i]) return;
-        state.board[i] = state.xTurn ? 'X' : 'O';
-        state.xTurn = !state.xTurn;
-        dibujar();
-        const w = checkLocalWin();
-        return;
-      }
-      // online: validar turno y símbolo
-      if (!mySymbol){ return; } // espectador
-      if (state.board[i]) return;
-      const me = mySymbol;
-      const myTurn = state.xTurn ? (me==='X') : (me==='O');
+      if (state.lock || state.board[i] || !mySymbol) return;
+      const myTurn = state.xTurn ? (mySymbol==='X') : (mySymbol==='O');
       if (!myTurn) return;
 
-      state.board[i] = me;
+      state.board[i] = mySymbol;
       state.xTurn = !state.xTurn;
-      dibujar();
       const w = calcWinner(state.board);
-      if (w==='X'){ puntosX++; ultimoGanador='X'; }
-      if (w==='O'){ puntosO++; ultimoGanador='O'; }
+      if (w==='X') puntosX++;
+      if (w==='O') puntosO++;
       state.lock = !!w;
-      await pushStateToDB(false,true);
+      await pushStateToDB();
     }
-
-    // Recalcular línea al cambiar tamaño
-    window.addEventListener('resize', ()=>{
-      if (winLine.classList.contains('show')){
-        const cells = cellEls();
-        const idxs = cells.map((c,i)=> c.classList.contains('win') ? i : -1).filter(i=>i!==-1);
-        if (idxs.length===3){ drawWinLine(idxs[0], idxs[2]); }
-      }
-    });
-    
-    // Render inicial
-    dibujar();
   </script>
 </body>
 </html>
