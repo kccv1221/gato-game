@@ -191,14 +191,19 @@
       state.board = Array(9).fill('');
       state.lock = false;
 
-      // Lógica de revancha
+      // Lógica de revancha: Si el último fue X, ahora es O. Si fue O, ahora es X.
       if (ultimoGanador === 'X') {
-        state.xTurn = false; // Empieza O
+        state.xTurn = false; 
       } else if (ultimoGanador === 'O') {
-        state.xTurn = true;  // Empieza X
+        state.xTurn = true;
       } else {
-        state.xTurn = !state.xTurn; // Si fue empate, que rote
+        // Por si acaso no hay ganador previo, solo invierte el que estaba
+        state.xTurn = !state.xTurn; 
       }
+
+      // IMPORTANTE: Limpiamos la variable para que la próxima partida 
+      // no use un ganador "viejo" si algo falla
+      ultimoGanador = null; 
 
       cellEls().forEach(c => c.classList.remove('win'));
       dibujar();
