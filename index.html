@@ -18,6 +18,7 @@
       background:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
+    /* Fondo con moñitos dispersos */
     .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(2);}
     
     .app{width:100%; max-width:540px}
@@ -95,7 +96,7 @@
   </div>
 
   <script type="module">
-    /* ---------------- Fondo con moñitos ---------------- */
+    /* ---------------- Fondo ---------------- */
     const bowsToGenerate = 22;
     for(let i=0;i<bowsToGenerate;i++){
       const img=document.createElement("img");
@@ -111,7 +112,7 @@
       document.body.appendChild(img);
     }
 
-    /* ---------------- UI refs ---------------- */
+    /* ---------------- UI ---------------- */
     const grid = document.getElementById('grid');
     const wrap = document.querySelector('.board-wrap');
     const winLine = document.getElementById('winLine');
@@ -126,10 +127,9 @@
     const statusEl = document.getElementById('status');
     const rolPill = document.getElementById('rolPill');
 
-    /* ---------------- Estado local ---------------- */
+    /* ---------------- Estado ---------------- */
     const state = { board: Array(9).fill(''), xTurn: true, lock: false };
-    let puntosX = 0, puntosO = 0;
-    let ultimoGanador = null; 
+    let puntosX = 0, puntosO = 0, ultimoGanador = null;
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
     
     function cellEls(){ return [...document.querySelectorAll('.cell')]; }
@@ -157,37 +157,6 @@
       winLine.classList.add('show');
     }
 
-    function tableroNuevo(){
-      state.board = Array(9).fill('');
-      state.lock = false;
-
-      // Lógica de revancha: el que ganó NO empieza.
-      if (ultimoGanador === 'X') {
-        state.xTurn = false; // Empieza O
-      } else if (ultimoGanador === 'O') {
-        state.xTurn = true;  // Empieza X
-      } else {
-        state.xTurn = !state.xTurn; 
-      }
-
-      dibujar();
-    }
-
-    resetBtn.onclick = ()=>{ 
-      puntosX=0; puntosO=0; 
-      ultimoGanador = null; 
-      state.xTurn = true; 
-      tableroNuevo(); 
-      if(roomRef) pushStateToDB(true); 
-    };
-    
-    nuevoBtn.onclick = ()=>{ 
-      tableroNuevo(); 
-      if(roomRef) pushStateToDB(false); 
-      // Limpiamos después de subirlo a Firebase
-      ultimoGanador = null;
-    };
-
     /* ---------------- Firebase ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -204,24 +173,35 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let mySymbol = null;
-    let roomRef = null;
-    let unsub = null;
+    let mySymbol = null, roomRef = null;
 
     async function joinOrCreateRoom(){
       const nombre = nombreInput.value.trim() || 'Jugador';
       const code = (codigoInput.value || '').trim().toLowerCase();
       if (!code) return;
+      
       roomRef = ref(db, 'rooms/'+code);
+      const savedSymbol = localStorage.getItem('gato_role_' + code);
       const snap = await get(roomRef);
+
       if (!snap.exists()){
         mySymbol = 'X';
+        localStorage.setItem('gato_role_' + code, 'X');
         await set(roomRef, { board: Array(9).fill(''), xTurn: true, winner: null, players: { X: nombre }, scores: { X: 0, O: 0 } });
-      }else{
-        const players = snap.val().players || {};
-        if (!players.X){ mySymbol='X'; await update(roomRef, { 'players/X': nombre }); }
-        else if (!players.O){ mySymbol='O'; await update(roomRef, { 'players/O': nombre }); }
-        else { mySymbol=null; }
+      } else {
+        const d = snap.val();
+        const pl = d.players || {};
+        if (savedSymbol && (pl[savedSymbol] === nombre || pl[savedSymbol])) {
+          mySymbol = savedSymbol;
+        } else if (!pl.X) {
+          mySymbol = 'X'; localStorage.setItem('gato_role_' + code, 'X');
+          await update(roomRef, { 'players/X': nombre });
+        } else if (!pl.O) {
+          mySymbol = 'O'; localStorage.setItem('gato_role_' + code, 'O');
+          await update(roomRef, { 'players/O': nombre });
+        } else {
+          mySymbol = null;
+        }
       }
       rolPill.textContent = mySymbol ? `Tú: ${mySymbol}` : 'Espectador';
       subscribeRoom();
@@ -234,21 +214,19 @@
         state.board = d.board || Array(9).fill('');
         state.xTurn = d.xTurn;
         state.lock = !!d.winner;
-        puntosX = d.scores?.X || 0;
-        puntosO = d.scores?.O || 0;
-        scoreXEl.textContent='X: '+puntosX;
-        scoreOEl.textContent='O: '+puntosO;
+        puntosX = d.scores?.X || 0; puntosO = d.scores?.O || 0;
+        scoreXEl.textContent='X: '+puntosX; scoreOEl.textContent='O: '+puntosO;
         dibujar();
-        if (d.winner && d.winner !== 'empate'){
+        if (d.winner){
           ultimoGanador = d.winner;
-          wins.forEach(w=>{
-            if(state.board[w[0]] && state.board[w[0]]===state.board[w[1]] && state.board[w[0]]===state.board[w[2]]){
-              drawWinLine(w[0], w[2]);
-            }
-          });
-          turnoTexto.innerHTML = `Ganó <b>${d.winner}</b> 🎉`;
-        } else if (d.winner === 'empate') {
-          turnoTexto.textContent = 'Empate 😐';
+          if (d.winner !== 'empate'){
+            wins.forEach(w=>{
+              if(state.board[w[0]] && state.board[w[0]]===state.board[w[1]] && state.board[w[0]]===state.board[w[2]]){
+                drawWinLine(w[0], w[2]);
+              }
+            });
+            turnoTexto.innerHTML = `Ganó <b>${d.winner}</b> 🎉`;
+          } else { turnoTexto.textContent = 'Empate 😐'; }
         }
       });
     }
@@ -276,15 +254,32 @@
       if (state.lock || state.board[i] || !mySymbol) return;
       const myTurn = state.xTurn ? (mySymbol==='X') : (mySymbol==='O');
       if (!myTurn) return;
-
       state.board[i] = mySymbol;
       state.xTurn = !state.xTurn;
       const w = calcWinner(state.board);
-      if (w==='X') puntosX++;
-      if (w==='O') puntosO++;
+      if (w==='X') puntosX++; if (w==='O') puntosO++;
       state.lock = !!w;
       await pushStateToDB();
     }
+
+    nuevoBtn.onclick = async ()=>{ 
+      state.board = Array(9).fill('');
+      state.lock = false;
+      if (ultimoGanador === 'X') state.xTurn = false;
+      else if (ultimoGanador === 'O') state.xTurn = true;
+      else state.xTurn = !state.xTurn;
+      await pushStateToDB();
+      ultimoGanador = null;
+    };
+
+    resetBtn.onclick = async ()=>{ 
+      localStorage.removeItem('gato_role_' + (codigoInput.value || '').trim().toLowerCase());
+      puntosX=0; puntosO=0; ultimoGanador=null; state.xTurn=true;
+      state.board = Array(9).fill(''); state.lock=false;
+      await pushStateToDB(true);
+    };
+
+    dibujar();
   </script>
 </body>
 </html>
