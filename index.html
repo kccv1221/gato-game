@@ -18,7 +18,7 @@
       background:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
-    /* Fondo con moñitos dispersos */
+    /* Fondo con moñitos */
     .bow{position:fixed; pointer-events:none; user-select:none; z-index:-1; opacity:.35; filter:saturate(2);}
     
     .app{width:100%; max-width:540px}
@@ -37,7 +37,7 @@
     button.primary{background:linear-gradient(180deg,#f6f6f9,#eee); border-color:#cfcfde}
     .pill{padding:6px 10px; border-radius:999px; background:#fff; border:1px solid var(--grid); font-size:12px; color:#444}
 
-    #status{margin:8px 0; color:var(--mut); font-size:14px}
+    #status{margin:8px 0; color:var(--mut); font-size:14px; font-weight: 500;}
 
     .board-wrap{position:relative}
     .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
@@ -112,7 +112,7 @@
       document.body.appendChild(img);
     }
 
-    /* ---------------- UI ---------------- */
+    /* ---------------- UI Refs ---------------- */
     const grid = document.getElementById('grid');
     const wrap = document.querySelector('.board-wrap');
     const winLine = document.getElementById('winLine');
@@ -127,7 +127,7 @@
     const statusEl = document.getElementById('status');
     const rolPill = document.getElementById('rolPill');
 
-    /* ---------------- Estado ---------------- */
+    /* ---------------- Estado Local ---------------- */
     const state = { board: Array(9).fill(''), xTurn: true, lock: false };
     let puntosX = 0, puntosO = 0, ultimoGanador = null;
     const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -157,7 +157,7 @@
       winLine.classList.add('show');
     }
 
-    /* ---------------- Firebase ---------------- */
+    /* ---------------- Firebase Setup ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -191,6 +191,7 @@
       } else {
         const d = snap.val();
         const pl = d.players || {};
+        // Reconocer usuario antiguo por nombre o por lo que guardó su navegador
         if (savedSymbol && (pl[savedSymbol] === nombre || pl[savedSymbol])) {
           mySymbol = savedSymbol;
         } else if (!pl.X) {
@@ -200,9 +201,11 @@
           mySymbol = 'O'; localStorage.setItem('gato_role_' + code, 'O');
           await update(roomRef, { 'players/O': nombre });
         } else {
-          mySymbol = null;
+          mySymbol = null; // Espectador
         }
       }
+      
+      statusEl.textContent = 'En sala: ' + code; // FIX: Se actualiza el texto
       rolPill.textContent = mySymbol ? `Tú: ${mySymbol}` : 'Espectador';
       subscribeRoom();
     }
@@ -262,20 +265,25 @@
       await pushStateToDB();
     }
 
+    /* ---------------- Botones de Control ---------------- */
     nuevoBtn.onclick = async ()=>{ 
       state.board = Array(9).fill('');
       state.lock = false;
+      // Revancha: el que ganó no empieza
       if (ultimoGanador === 'X') state.xTurn = false;
       else if (ultimoGanador === 'O') state.xTurn = true;
       else state.xTurn = !state.xTurn;
+      
       await pushStateToDB();
       ultimoGanador = null;
     };
 
     resetBtn.onclick = async ()=>{ 
-      localStorage.removeItem('gato_role_' + (codigoInput.value || '').trim().toLowerCase());
+      const code = (codigoInput.value || '').trim().toLowerCase();
+      if(code) localStorage.removeItem('gato_role_' + code);
       puntosX=0; puntosO=0; ultimoGanador=null; state.xTurn=true;
       state.board = Array(9).fill(''); state.lock=false;
+      statusEl.textContent = 'Sin sala';
       await pushStateToDB(true);
     };
 
